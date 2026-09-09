@@ -1,2 +1,3 @@
-# eagler-launcher
-Website to launch versions of eagler.
+# eaglerclients
+Website to launch versions of eaglercraft, servers and wisp urls.
+
