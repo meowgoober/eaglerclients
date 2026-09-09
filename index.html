@@ -244,7 +244,13 @@
     max-height: 340px;
     overflow-y: auto;
     margin-bottom: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: #4a4d52 transparent;
   }
+  .server-list::-webkit-scrollbar { width: 6px; }
+  .server-list::-webkit-scrollbar-track { background: transparent; }
+  .server-list::-webkit-scrollbar-thumb { background: #4a4d52; border-radius: 3px; }
+  .server-list::-webkit-scrollbar-thumb:hover { background: #5f636a; }
 
   .server-card {
     display: flex;
@@ -306,6 +312,20 @@
   }
   .remove-btn:hover { color: #c44b4b; }
 
+  .wisp-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .wisp-dot.green { background: #4caf50; box-shadow: 0 0 6px #4caf50; }
+  .wisp-dot.yellow { background: #ffc107; box-shadow: 0 0 6px #ffc107; animation: wisp-pulse 1.2s ease-in-out infinite; }
+  .wisp-dot.red { background: #f44336; box-shadow: 0 0 6px #f44336; }
+  @keyframes wisp-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
   .add-server-form {
     margin-top: 14px;
     padding-top: 14px;
@@ -317,6 +337,25 @@
     gap: 8px;
   }
   .add-server-form input { margin-bottom: 8px; }
+
+  .wisp-details {
+    margin-top: 16px;
+    border: 1px solid #3a3b3e;
+    border-radius: 4px;
+    background: #1c1d1f;
+  }
+  .wisp-details summary {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 12px;
+    cursor: pointer;
+    list-style: none;
+  }
+  .wisp-details summary::-webkit-details-marker { display: none; }
+  .wisp-details summary::before { content: "▸ "; color: var(--text-dim); }
+  .wisp-details[open] summary::before { content: "▾ "; }
+  .wisp-details .wisp-body { padding: 0 12px 12px; }
+  .wisp-details .server-list { max-height: 260px; }
 </style>
 </head>
 <body>
@@ -327,6 +366,7 @@
     <div class="tabs">
       <button class="tab-btn active" data-tab="play">Play</button>
       <button class="tab-btn" data-tab="servers">Servers</button>
+      <button class="tab-btn" data-tab="wisp">WISPCraft</button>
     </div>
 
     <!-- PLAY VIEW -->
@@ -396,6 +436,32 @@
         </div>
       </div>
     </div>
+
+    <!-- WISP VIEW -->
+    <div class="view" id="view-wisp">
+      <div class="hint" style="margin-bottom:12px;">WISPCraft is a project by Mercury Workshop to allow Eaglercraft to connect to normal online Minecraft servers via WISP, that includes if its a cracked server, or a normal online server by adding your Microsoft account. These clients are patched with it.</div>
+      <label for="clientSelectWisp">Client</label>
+      <select id="clientSelectWisp">
+        <option value="https://meowgoober.github.io/eaglerclients/wisp-clients/Eagler_Wurst.html">Eagler Wurst</option>
+        <option value="https://meowgoober.github.io/eaglerclients/wisp-clients/Eaglercraft_1.5.2.html">Eaglercraft 1.5.2</option>
+        <option value="https://meowgoober.github.io/eaglerclients/wisp-clients/Eaglercraft_1.12.2.html">Eaglercraft 1.12.2</option>
+        <option value="https://meowgoober.github.io/eaglerclients/wisp-clients/EaglercraftX_1.8.html">EaglercraftX 1.8</option>
+      </select>
+
+      <button class="play-btn" id="playBtnWisp">Play</button>
+
+      <div class="bottom-row">
+        <span class="status" id="statusTextWisp">Ready</span>
+      </div>
+
+      <details class="wisp-details">
+        <summary>WISP endpoints</summary>
+        <div class="wisp-body">
+          <div class="hint" style="margin:8px 0 12px;">Green = active, yellow = testing, red = offline.</div>
+          <div class="server-list" id="wispList"></div>
+        </div>
+      </details>
+    </div>
   </div>
 
 <script>
@@ -412,6 +478,25 @@
     { name: 'xenaMC', addr: 'wss://xena.wtf', tags: 'Minigames (Bedwars) · PitPvP · Survival · 1.9 PvP Training' },
     { name: 'JAXXMC', addr: 'wss://jaxxmc.eagler.host', tags: 'PvP · Economy · Survival' },
     { name: 'CarrotCraft Network', addr: 'wss://eagler.carrot-craft.org', tags: 'PvP · Economy · Survival' },
+];
+
+  const WISP_URLS = [
+    { url: 'wss://anura.pro/', location: 'San Jose, United States', flag: '🇺🇸' },
+    { url: 'wss://webmc.xyz/api/wisp/', location: 'Paris, France', flag: '🇫🇷' },
+    { url: 'wss://daydreamx.pro/wisp/', location: 'Beauharnois, Canada', flag: '🇨🇦' },
+    { url: 'wss://petezahgames.com/wisp/', location: 'Phoenix, United States', flag: '🇺🇸' },
+    { url: 'wss://petezahgames.com/api/alt-wisp-1/', location: 'Phoenix, United States', flag: '🇺🇸' },
+    { url: 'wss://petezahgames.com/api/alt-wisp-2/', location: 'Phoenix, United States', flag: '🇺🇸' },
+    { url: 'wss://petezahgames.com/api/alt-wisp-3/', location: 'Phoenix, United States', flag: '🇺🇸' },
+    { url: 'wss://petezahgames.com/api/alt-wisp-4/', location: 'Phoenix, United States', flag: '🇺🇸' },
+    { url: 'wss://gointospace.app/wisp/', location: 'Reston, United States', flag: '🇺🇸' },
+    { url: 'wss://terbium.top/wisp/', location: 'Reston, United States', flag: '🇺🇸' },
+    { url: 'wss://eu-central.wisp.q13x.com/', location: 'Frankfurt am Main, Germany', flag: '🇩🇪' },
+    { url: 'wss://se-asia.wisp.q13x.com/', location: 'Singapore, Singapore', flag: '🇸🇬' },
+    { url: 'wss://us-east.wisp.q13x.com/', location: 'Washington, United States', flag: '🇺🇸' },
+    { url: 'wss://wisp.webmc.xyz/', location: 'Dallas, United States', flag: '🇺🇸' },
+    { url: 'wss://fern.best/wisp/', location: 'Ashburn, United States', flag: '🇺🇸' },
+    { url: 'wss://degloved.net/', location: 'Dallas, United States', flag: '🇺🇸' },
   ];
 
   function loadState() {
@@ -460,11 +545,36 @@
   const select = document.getElementById('clientSelect');
   const playBtn = document.getElementById('playBtn');
   const statusText = document.getElementById('statusText');
+  const selectWisp = document.getElementById('clientSelectWisp');
+  const playBtnWisp = document.getElementById('playBtnWisp');
+  const statusTextWisp = document.getElementById('statusTextWisp');
   const gearBtn = document.getElementById('gearBtn');
   const themePanel = document.getElementById('themePanel');
 
-  if (state.client && Array.from(select.options).some(o => o.value === state.client)) {
-    select.value = state.client;
+  function clientFile(url) {
+    return String(url).split('/').pop();
+  }
+
+  function setClient(value) {
+    const file = clientFile(value);
+    const matchMain = Array.from(select.options).find(o => clientFile(o.value) === file);
+    const matchWisp = Array.from(selectWisp.options).find(o => clientFile(o.value) === file);
+    if (matchMain) select.value = matchMain.value;
+    if (matchWisp) selectWisp.value = matchWisp.value;
+  }
+
+  function launchClient(target, statusEl) {
+    if (!target) return;
+    saveState({ client: target });
+    statusEl.textContent = 'Launching…';
+    window.open(target, '_blank', 'noopener');
+    setTimeout(() => {
+      statusEl.textContent = 'Ready';
+    }, 800);
+  }
+
+  if (state.client) {
+    setClient(state.client);
   }
 
   applyAccent(state.accent || '#4a8f3c');
@@ -472,18 +582,24 @@
 
   select.addEventListener('change', () => {
     saveState({ client: select.value });
+    setClient(select.value);
     statusText.textContent = 'Ready';
+    statusTextWisp.textContent = 'Ready';
+  });
+
+  selectWisp.addEventListener('change', () => {
+    saveState({ client: selectWisp.value });
+    setClient(selectWisp.value);
+    statusText.textContent = 'Ready';
+    statusTextWisp.textContent = 'Ready';
   });
 
   playBtn.addEventListener('click', () => {
-    const target = select.value;
-    if (!target) return;
-    saveState({ client: target });
-    statusText.textContent = 'Launching…';
-    window.open(target, '_blank', 'noopener');
-    setTimeout(() => {
-      statusText.textContent = 'Ready';
-    }, 800);
+    launchClient(select.value, statusText);
+  });
+
+  playBtnWisp.addEventListener('click', () => {
+    launchClient(selectWisp.value, statusTextWisp);
   });
 
   gearBtn.addEventListener('click', () => {
@@ -595,6 +711,77 @@
     return div.innerHTML;
   }
 
+  function renderWisp() {
+    const wispListEl = document.getElementById('wispList');
+    wispListEl.innerHTML = '';
+    WISP_URLS.forEach((w) => {
+      const card = document.createElement('div');
+      card.className = 'server-card';
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+          <div class="wisp-dot yellow" title="testing"></div>
+          <div class="server-info">
+            <div class="server-name">${escapeHtml(w.url)}</div>
+            <div class="server-addr">${escapeHtml(w.location)} ${escapeHtml(w.flag)}</div>
+          </div>
+        </div>
+      `;
+      const dot = card.querySelector('.wisp-dot');
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'copy-btn';
+      copyBtn.textContent = 'Copy';
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(w.url).then(() => {
+          copyBtn.textContent = 'Copied';
+          copyBtn.classList.add('copied');
+          setTimeout(() => {
+            copyBtn.textContent = 'Copy';
+            copyBtn.classList.remove('copied');
+          }, 1200);
+        });
+      });
+      card.appendChild(copyBtn);
+      wispListEl.appendChild(card);
+      probeWisp(w.url, dot);
+    });
+  }
+
+  function probeWisp(url, dot) {
+    let settled = false;
+    let ws = null;
+    const setStatus = (color) => {
+      dot.className = 'wisp-dot ' + color;
+      dot.title = color === 'green' ? 'active' : color === 'red' ? 'offline' : 'testing';
+    };
+    const fail = () => {
+      if (settled) return;
+      settled = true;
+      try { ws && ws.close(); } catch (e) {}
+      setStatus('red');
+    };
+    const timer = setTimeout(fail, 6000);
+    try {
+      ws = new WebSocket(url);
+    } catch (e) {
+      clearTimeout(timer);
+      setStatus('red');
+      return;
+    }
+    ws.onopen = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      setStatus('green');
+      try { ws.close(); } catch (e) {}
+    };
+    ws.onclose = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      setStatus('red');
+    };
+  }
+
   document.getElementById('addServerBtn').addEventListener('click', () => {
     const nameInput = document.getElementById('newServerName');
     const addrInput = document.getElementById('newServerAddr');
@@ -610,6 +797,7 @@
   });
 
   renderServers();
+  renderWisp();
 </script>
 
 </body>
