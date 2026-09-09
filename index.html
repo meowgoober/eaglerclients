@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>xdijd's eaglerclients</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --accent: #4a8f3c;
+    --bg: #202225;
+    --panel: #2b2d31;
+    --border: #1a1b1e;
+    --text: #e6e6e6;
+    --text-dim: #949494;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; margin: 0; }
+
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    color: var(--text);
+    background: var(--bg) center / cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+
+  /* subtle scrim so the card reads clearly over any wallpaper */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    pointer-events: none;
+  }
+
+  .launcher {
+    position: relative;
+    width: min(380px, 90vw);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 28px 28px 24px;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+    margin: 0 0 20px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: #1c1d1f;
+    border-radius: 6px;
+    padding: 3px;
+    margin-bottom: 20px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: none;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 0;
+    cursor: pointer;
+  }
+
+  .tab-btn.active {
+    background: var(--panel);
+    color: var(--text);
+  }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  select, input[type="text"] {
+    width: 100%;
+    font-family: inherit;
+    font-size: 15px;
+    color: var(--text);
+    background: #1c1d1f;
+    border: 1px solid #3a3b3e;
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+  }
+
+  select { cursor: pointer; }
+
+  select:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .play-btn, .small-btn {
+    font-family: inherit;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .play-btn {
+    width: 100%;
+    font-size: 15px;
+    padding: 12px;
+  }
+
+  .play-btn:hover, .small-btn:hover { filter: brightness(1.1); }
+  .play-btn:active, .small-btn:active { filter: brightness(0.95); }
+
+  .bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+  }
+
+  .status { font-size: 12px; color: var(--text-dim); }
+
+  .gear-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+  }
+  .gear-btn:hover { color: var(--text); }
+
+  .theme-panel {
+    display: none;
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid #3a3b3e;
+  }
+  .theme-panel.open { display: block; }
+  .theme-panel label { margin-top: 14px; }
+  .theme-panel label:first-child { margin-top: 0; }
+
+  .swatches { display: flex; gap: 8px; }
+
+  .swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+  }
+  .swatch.active { border-color: #fff; }
+
+  .custom-color-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  input[type="color"] {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .custom-color-row span, .hint { font-size: 13px; color: var(--text-dim); }
+
+  .wallpaper-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .file-btn {
+    flex: 1;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    background: #1c1d1f;
+    border: 1px solid #3a3b3e;
+    border-radius: 4px;
+    padding: 9px 0;
+    cursor: pointer;
+  }
+  .file-btn:hover { border-color: var(--accent); }
+
+  .clear-btn {
+    font-size: 13px;
+    color: var(--text-dim);
+    background: none;
+    border: 1px solid #3a3b3e;
+    border-radius: 4px;
+    padding: 9px 12px;
+    cursor: pointer;
+  }
+  .clear-btn:hover { color: #fff; border-color: #c44b4b; }
+
+  .more-servers-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .link-btn {
+    flex: 1;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    background: #1c1d1f;
+    border: 1px solid #3a3b3e;
+    border-radius: 4px;
+    padding: 8px 6px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .link-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* --- Servers view --- */
+  .server-list {
+    max-height: 340px;
+    overflow-y: auto;
+    margin-bottom: 4px;
+  }
+
+  .server-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #3a3b3e;
+  }
+  .server-card:last-child { border-bottom: none; }
+
+  .server-info { min-width: 0; }
+
+  .server-name {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .server-addr {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: "SFMono-Regular", Consolas, monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .server-tags {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  .copy-btn {
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    background: #1c1d1f;
+    border: 1px solid #3a3b3e;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .copy-btn:hover { border-color: var(--accent); }
+  .copy-btn.copied { color: var(--accent); border-color: var(--accent); }
+
+  .remove-btn {
+    flex-shrink: 0;
+    font-size: 14px;
+    color: var(--text-dim);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 2px;
+  }
+  .remove-btn:hover { color: #c44b4b; }
+
+  .add-server-form {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #3a3b3e;
+  }
+
+  .add-server-form .row {
+    display: flex;
+    gap: 8px;
+  }
+  .add-server-form input { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+  <div class="launcher">
+    <h1>xdijd's eaglerclients</h1>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="play">Play</button>
+      <button class="tab-btn" data-tab="servers">Servers</button>
+    </div>
+
+    <!-- PLAY VIEW -->
+    <div class="view active" id="view-play">
+      <label for="clientSelect">Client</label>
+      <select id="clientSelect">
+        <option value="https://meowgoober.github.io/eaglerclients/clients/Archimedes.html">Archimedes</option>
+        <option value="https://meowgoober.github.io/eaglerclients/clients/Astra.html">Astra</option>
+        <option value="https://meowgoober.github.io/eaglerclients/clients/Ayuncraft.html">Ayuncraft</option>
+        <option value="https://meowgoober.github.io/eaglerclients/clients/CoderCraft.html">CoderCraft</option>
+        <option value="https://meowgoober.github.io/eaglerclients/clients/Eagler_Wurst.html">Eagler Wurst</option>
+        <option value="https://meowgoober.github.io/eaglerclients/clients/Eaglercraft_1.5.2.html">Eaglercraft 1.5.2</option>
+        <option value="https://meowgoober.github.io/eaglerclients/clients/Eaglercraft_1.12.2.html">Eaglercraft 1.12.2</option>
+        <option value="https://meowgoober.github.io/eaglerclients/clients/EaglercraftLite.html">EaglercraftLite</option>
+        <option value="https://meowgoober.github.io/eaglerclients/clients/EaglercraftMagic.html">EaglercraftMagic</option>
+        <option value="https://meowgoober.github.io/eaglerclients/clients/EaglercraftX_1.8.html">EaglercraftX 1.8</option>
+        <option value="https://meowgoober.github.io/eaglerclients/clients/EBClient.html">EBClient</option>
+      </select>
+
+      <button class="play-btn" id="playBtn">Play</button>
+
+      <div class="bottom-row">
+        <span class="status" id="statusText">Ready</span>
+        <button class="gear-btn" id="gearBtn" title="Customize theme">⚙</button>
+      </div>
+
+      <div class="theme-panel" id="themePanel">
+        <label>Accent color</label>
+        <div class="swatches" id="swatches">
+          <button class="swatch" data-color="#4a8f3c" style="background:#4a8f3c"></button>
+          <button class="swatch" data-color="#3b7fc4" style="background:#3b7fc4"></button>
+          <button class="swatch" data-color="#c44b4b" style="background:#c44b4b"></button>
+          <button class="swatch" data-color="#9b59b6" style="background:#9b59b6"></button>
+          <button class="swatch" data-color="#d1a636" style="background:#d1a636"></button>
+          <button class="swatch" data-color="#3fb2a0" style="background:#3fb2a0"></button>
+        </div>
+        <div class="custom-color-row">
+          <input type="color" id="customColor" value="#4a8f3c">
+          <span>custom</span>
+        </div>
+
+        <label>Wallpaper</label>
+        <div class="wallpaper-row">
+          <label class="file-btn" for="wallpaperInput">Upload image</label>
+          <button class="clear-btn" id="clearWallpaper">Reset</button>
+        </div>
+        <input type="file" id="wallpaperInput" accept="image/*" style="display:none">
+        <div class="hint" style="margin-top:6px;">Saved in this browser only.</div>
+      </div>
+    </div>
+
+    <!-- SERVERS VIEW -->
+    <div class="view" id="view-servers">
+      <div class="hint" style="margin-bottom:12px;">This is fetched from eaglercraft.com and topeaglerservers.com. If you want your server here for free, contact me on Discord: xdijd</div>
+      <div class="more-servers-row">
+        <a class="link-btn" href="https://servers.eaglercraft.com/" target="_blank" rel="noopener">More on eaglercraft.com ↗</a>
+        <a class="link-btn" href="https://topeaglerservers.com/" target="_blank" rel="noopener">More on topeaglerservers.com ↗</a>
+      </div>
+      <div class="server-list" id="serverList"></div>
+
+      <div class="add-server-form">
+        <label for="newServerName">Add a server</label>
+        <input type="text" id="newServerName" placeholder="Server name">
+        <div class="row">
+          <input type="text" id="newServerAddr" placeholder="wss://example.com" style="margin-bottom:0;">
+          <button class="small-btn" id="addServerBtn" style="padding:0 16px;">Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const STORAGE_KEY = 'xdijd_launcher_state_v1';
+
+  const DEFAULT_SERVERS = [
+    { name: 'BagelSMP', addr: 'wss://top.bagelsmp.com', tags: 'Economy · Survival' },
+    { name: 'Voidsent MC', addr: 'wss://mc.voidsent.net', tags: 'PvP · Economy · Minigames · Survival' },
+    { name: 'ArchyverseV', addr: 'wss://mc.archyverse.org', tags: 'PvP · Economy · Survival · Lifesteal' },
+    { name: 'KrypticMC', addr: 'wss://krypticmc.net', tags: 'PvP · Economy · Minigames · Survival · Lifesteal' },
+    { name: 'Pixel Craft', addr: 'wss://pcsmp.net', tags: 'PvP · Economy · Minigames · Creative · Lifesteal' },
+    { name: 'Pletzel MC', addr: 'wss://pletzel.eagler.host', tags: 'PvP' },
+    { name: 'BEAGLECRAFT SEASON 2', addr: 'wss://join.beaglecraft.online', tags: 'PvP · Economy · Minigames · Survival' },
+    { name: 'xenaMC', addr: 'wss://xena.wtf', tags: 'Minigames (Bedwars) · PitPvP · Survival · 1.9 PvP Training' },
+    { name: 'JAXXMC', addr: 'wss://jaxxmc.eagler.host', tags: 'PvP · Economy · Survival' },
+    { name: 'CarrotCraft Network', addr: 'wss://eagler.carrot-craft.org', tags: 'PvP · Economy · Survival' },
+  ];
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveState(partial) {
+    const merged = Object.assign(loadState(), partial);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+  }
+
+  function applyAccent(color) {
+    document.documentElement.style.setProperty('--accent', color);
+    document.querySelectorAll('.swatch').forEach(sw => {
+      sw.classList.toggle('active', sw.dataset.color.toLowerCase() === color.toLowerCase());
+    });
+    document.getElementById('customColor').value = color;
+  }
+
+  function applyWallpaper(dataUrl) {
+    if (dataUrl) {
+      document.body.style.backgroundImage = `url(${dataUrl})`;
+    } else {
+      document.body.style.backgroundImage = 'none';
+    }
+  }
+
+  const state = loadState();
+
+  // ---- tabs ----
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('view-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ---- play view ----
+  const select = document.getElementById('clientSelect');
+  const playBtn = document.getElementById('playBtn');
+  const statusText = document.getElementById('statusText');
+  const gearBtn = document.getElementById('gearBtn');
+  const themePanel = document.getElementById('themePanel');
+
+  if (state.client && Array.from(select.options).some(o => o.value === state.client)) {
+    select.value = state.client;
+  }
+
+  applyAccent(state.accent || '#4a8f3c');
+  applyWallpaper(state.wallpaper || null);
+
+  select.addEventListener('change', () => {
+    saveState({ client: select.value });
+    statusText.textContent = 'Ready';
+  });
+
+  playBtn.addEventListener('click', () => {
+    const target = select.value;
+    if (!target) return;
+    saveState({ client: target });
+    statusText.textContent = 'Launching…';
+    window.open(target, '_blank', 'noopener');
+    setTimeout(() => {
+      statusText.textContent = 'Ready';
+    }, 800);
+  });
+
+  gearBtn.addEventListener('click', () => {
+    themePanel.classList.toggle('open');
+  });
+
+  document.getElementById('swatches').addEventListener('click', (e) => {
+    const btn = e.target.closest('.swatch');
+    if (!btn) return;
+    applyAccent(btn.dataset.color);
+    saveState({ accent: btn.dataset.color });
+  });
+
+  document.getElementById('customColor').addEventListener('input', (e) => {
+    applyAccent(e.target.value);
+    saveState({ accent: e.target.value });
+  });
+
+  document.getElementById('wallpaperInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) {
+      alert('Please pick an image under 3MB — larger ones may not fit in browser storage.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      applyWallpaper(reader.result);
+      try {
+        saveState({ wallpaper: reader.result });
+      } catch (err) {
+        alert('That image was too large to save. Try a smaller one.');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('clearWallpaper').addEventListener('click', () => {
+    applyWallpaper(null);
+    saveState({ wallpaper: null });
+    document.getElementById('wallpaperInput').value = '';
+  });
+
+  // ---- servers view ----
+  const serverListEl = document.getElementById('serverList');
+
+  function getCustomServers() {
+    return loadState().customServers || [];
+  }
+
+  function renderServers() {
+    serverListEl.innerHTML = '';
+    const all = DEFAULT_SERVERS.map(s => ({ ...s, custom: false }))
+      .concat(getCustomServers().map(s => ({ ...s, custom: true })));
+
+    all.forEach((s, i) => {
+      const card = document.createElement('div');
+      card.className = 'server-card';
+      card.innerHTML = `
+        <div class="server-info">
+          <div class="server-name">${escapeHtml(s.name)}</div>
+          <div class="server-addr">${escapeHtml(s.addr)}</div>
+          ${s.tags ? `<div class="server-tags">${escapeHtml(s.tags)}</div>` : ''}
+        </div>
+      `;
+      const btnWrap = document.createElement('div');
+      btnWrap.style.display = 'flex';
+      btnWrap.style.alignItems = 'center';
+      btnWrap.style.gap = '6px';
+
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'copy-btn';
+      copyBtn.textContent = 'Copy';
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(s.addr).then(() => {
+          copyBtn.textContent = 'Copied';
+          copyBtn.classList.add('copied');
+          setTimeout(() => {
+            copyBtn.textContent = 'Copy';
+            copyBtn.classList.remove('copied');
+          }, 1200);
+        });
+      });
+      btnWrap.appendChild(copyBtn);
+
+      if (s.custom) {
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-btn';
+        removeBtn.textContent = '✕';
+        removeBtn.title = 'Remove';
+        removeBtn.addEventListener('click', () => {
+          const custom = getCustomServers();
+          const idx = custom.findIndex(c => c.name === s.name && c.addr === s.addr);
+          if (idx > -1) custom.splice(idx, 1);
+          saveState({ customServers: custom });
+          renderServers();
+        });
+        btnWrap.appendChild(removeBtn);
+      }
+
+      card.appendChild(btnWrap);
+      serverListEl.appendChild(card);
+    });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  document.getElementById('addServerBtn').addEventListener('click', () => {
+    const nameInput = document.getElementById('newServerName');
+    const addrInput = document.getElementById('newServerAddr');
+    const name = nameInput.value.trim();
+    const addr = addrInput.value.trim();
+    if (!name || !addr) return;
+    const custom = getCustomServers();
+    custom.push({ name, addr, tags: '' });
+    saveState({ customServers: custom });
+    nameInput.value = '';
+    addrInput.value = '';
+    renderServers();
+  });
+
+  renderServers();
+</script>
+
+</body>
+</html>
